@@ -230,6 +230,14 @@
     <frac|tan<around*|(|\<theta\>|)>|r>|\<\|\|\>><rsup|2>>>>>>|\<nobracket\>>
   </equation>
 
+  The <with|font-shape|italic|best> model is that minimizing the total loss
+  function
+
+  <\equation>
+    <below|arg min|\<lambda\>> L<rsub|1><around*|(|\<theta\>,\<phi\>|)>+\<lambda\>
+    L<rsub|2><around*|(|\<theta\>,\<phi\>|)>
+  </equation>
+
   <subsection|The equation and fields in spherical coordinates>
 
   First, we start by expressing the toroidal and poloidal parts of the
@@ -246,6 +254,37 @@
     <frac|\<partial\><with|font|cal|S>|\<partial\>\<phi\>>|)>>>>>>|\<nobracket\>>
   </equation>
 
+  Recalling the induction equation, we need to express the horizontal
+  divergence of the tangential flow in spherical coordinates.
+
+  <\equation>
+    <with|font-series|bold|\<nabla\>><rsub|H> \<cdot\>
+    <with|font-series|bold|u><rsub|H> = <frac|1|r sin<around*|(|\<theta\>|)>>
+    <frac|\<partial\>|\<partial\>\<theta\>><around*|(|u<rsub|\<theta\>>
+    sin<around*|(|\<theta\>|)>|)> + \ <frac|1|r sin<around*|(|\<theta\>|)>>
+    <frac|\<partial\>u<rsub|\<phi\>>|\<partial\>\<phi\>>
+  </equation>
+
+  Finally, the induction equation in spherical coordinates reads
+
+  <\equation>
+    <tabular*|<tformat|<cwith|1|-1|3|3|cell-halign|l>|<table|<row|<cell|<frac|\<partial\>B<rsub|r>|\<partial\>t>>|<cell|=>|<cell|-<frac|1|r
+    sin<around*|(|\<theta\>|)>> <around*|[|<frac|\<partial\>|\<partial\>\<theta\>><around*|(|u<rsub|\<theta\>>
+    sin<around*|(|\<theta\>|)>|)>+<frac|\<partial\>u<rsub|\<phi\>>|\<partial\>\<phi\>>|]>B<rsub|r>
+    >>|<row|<cell|>|<cell|->|<cell|<frac|1|r
+    sin<around*|(|\<theta\>|)>><around*|[|u<rsub|\<theta\>>
+    sin<around*|(|\<theta\>|)><frac|\<partial\>B<rsub|r>|\<partial\>\<theta\>>
+    + u<rsub|\<phi\>> <frac|\<partial\>B<rsub|r>|\<partial\>\<phi\>>|]>>>>>>
+  </equation>
+
+  with the quasi-geostrophic constraint
+
+  <\equation>
+    <frac|1|sin<around*|(|\<theta\>|)>> <around*|[|<frac|\<partial\>|\<partial\>\<theta\>><around*|(|u<rsub|\<theta\>>
+    sin<around*|(|\<theta\>|)>|)>+<frac|\<partial\>u<rsub|\<phi\>>|\<partial\>\<phi\>>|]>-
+    u<rsub|\<theta\>> tan<around*|(|\<theta\>|)>= 0
+  </equation>
+
   <appendix|Del in spherical coordinates>
 
   Recalling the usual (but useful) formulae of the del operator in spherical
@@ -253,12 +292,22 @@
   <math|F<around*|(|r,\<theta\>,\<phi\>|)>> or a vector field
   <math|<with|font-series|bold|F><around*|(|r,\<theta\>,\<phi\>|)>>.
 
-  <subsection|Gradient>
+  <subsection|Horizontal gradient>
 
   <\equation>
-    <with|font-series|bold|\<nabla\>>F = <around*|(|<frac|\<partial\>F|\<partial\>r>,<frac|1|r>
+    <with|font-series|bold|\<nabla\>><rsub|H>F = <around*|(|<frac|1|r>
     <frac|\<partial\>F|\<partial\>\<theta\>>,<frac|1|r
     sin<around*|(|\<theta\>|)>> <frac|\<partial\>F|\<partial\>\<phi\>>|)>
+  </equation>
+
+  <subsection|Horizontal divergence>
+
+  <\equation>
+    <with|font-series|bold|\<nabla\>><rsub|H> \<cdot\>
+    <with|font-series|bold|F><rsub|H> = <frac|1|r sin<around*|(|\<theta\>|)>>
+    <frac|\<partial\>|\<partial\>\<theta\>><around*|(|F<rsub|\<theta\>>
+    sin<around*|(|\<theta\>|)>|)> + \ <frac|1|r sin<around*|(|\<theta\>|)>>
+    <frac|\<partial\>F<rsub|\<phi\>>|\<partial\>\<phi\>>
   </equation>
 
   \;
@@ -277,6 +326,7 @@
     <associate|auto-6|<tuple|4.2|5>>
     <associate|auto-7|<tuple|A|5>>
     <associate|auto-8|<tuple|A.1|5>>
+    <associate|auto-9|<tuple|A.2|?>>
   </collection>
 </references>
 
