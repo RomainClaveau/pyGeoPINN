@@ -1,6 +1,6 @@
 <TeXmacs|2.1.4>
 
-<style|<tuple|elsarticle|french>>
+<style|<tuple|elsarticle|number-long-article|british>>
 
 <\body>
   <doc-data|<doc-title|Machine Learning for the geodynamo
@@ -48,7 +48,57 @@
 
   <section|The geodynamo inverse problem>
 
-  \;
+  The induction equation, relating the core flow to the magnetic field, is
+  obtained from Ohm's law (accounting for the Lorentz force)
+
+  <\equation>
+    <with|font-series|bold|J> = \<sigma\><around*|(|<with|font-series|bold|E>
+    + <with|font-series|bold|u> \<times\><with|font-series|bold|B>|)>
+  </equation>
+
+  where <with|font-series|bold|<math|J>> is the electric current field,
+  <math|<with|font-series|bold|E>> the electrical field,
+  <math|<with|font-series|bold|u>> the velocity field and
+  <math|<with|font-series|bold|B>> the magnetic field. Because the Earth's
+  mantle is electrically insulating (at least has a very low electrical
+  conductivity), <math|<with|font-series|bold|J>> vanishes. Then, taking the
+  curl, and using the Faraday's law, one gets the ideal magneto-hydrodynamics
+  equation
+
+  <\equation>
+    <frac|\<partial\><with|font-series|bold|B>|\<partial\>t> \ =
+    <with|font-series|bold|\<nabla\>>\<times\><around*|(|<with|font-series|bold|u>\<times\><with|font-series|bold|B>|)>
+  </equation>
+
+  where <math|<with|font-series|bold|\<nabla\>>\<times\>> is the curl
+  operator. Also, because we are considerating the mantle as insulating, the
+  magnetic field is divergence-free and curl-free. As a result, it derives
+  from a potential <math|<with|font-series|bold|B> =
+  -<with|font-series|bold|\<nabla\>>V>, with <math|V> the magnetic potential,
+  and its evolution above the outer core surface is entirely prescribed by
+  its radial component at the core-mantle boundary (CMB).
+
+  At the CMB, the outer core motions are constrained by the mantle as it
+  cannot flow radially. As a result, only its tangential components are
+  non-zero. Finally, because the radial magnetic field is the only one driven
+  by these tangential motions, one gets the radial induction equation at the
+  CMB, reading as
+
+  <\equation>
+    <frac|\<partial\>B<rsub|r>|\<partial\>t> =
+    -<with|font-series|bold|\<nabla\>><rsub|H> \<cdot\>
+    <around*|(|<with|font-series|bold|u><rsub|H> B<rsub|r>|)>
+  </equation>
+
+  where <math|<with|font-series|bold|\<nabla\>><rsub|H> \<cdot\>> is the
+  horizontal (tangential) divergence operator, <math|B<rsub|r>> the radial
+  magnetic field and <math|<with|font-series|bold|u><rsub|H>> the tangential
+  flow.
+
+  Thus, the <with|font-shape|italic|geodynamo inverse problem> is precisely
+  inferring the tangential outer core flow
+  <math|<with|font-series|bold|u><rsub|H>> from the magnetic observations
+  <math|B<rsub|r>>.
 </body>
 
 <initial|<\collection>
@@ -56,8 +106,8 @@
 
 <\references>
   <\collection>
-    <associate|auto-1|<tuple|1|?>>
-    <associate|auto-2|<tuple|2|?>>
+    <associate|auto-1|<tuple|1|1>>
+    <associate|auto-2|<tuple|2|2>>
   </collection>
 </references>
 
@@ -67,6 +117,10 @@
       <vspace*|1fn><with|font-series|<quote|bold>|math-font-series|<quote|bold>|1<space|1.1fn>Context>
       <datoms|<macro|x|<repeat|<arg|x>|<with|font-series|medium|<with|font-size|1|<space|0.2fn>.<space|0.2fn>>>>>|<htab|5mm>>
       <no-break><pageref|auto-1><vspace|0.5fn>
+
+      <vspace*|1fn><with|font-series|<quote|bold>|math-font-series|<quote|bold>|2<space|1.1fn>The
+      geodynamo inverse problem> <datoms|<macro|x|<repeat|<arg|x>|<with|font-series|medium|<with|font-size|1|<space|0.2fn>.<space|0.2fn>>>>>|<htab|5mm>>
+      <no-break><pageref|auto-2><vspace|0.5fn>
     </associate>
   </collection>
 </auxiliary>
