@@ -21,6 +21,27 @@
       <vspace*|1fn><with|font-series|bold|math-font-series|bold|3<space|1.1fn>Tangential
       flow field> <datoms|<macro|x|<repeat|<arg|x>|<with|font-series|medium|<with|font-size|1|<space|0.2fn>.<space|0.2fn>>>>>|<htab|5mm>>
       <no-break><pageref|auto-3><vspace|0.5fn>
+
+      <vspace*|1fn><with|font-series|bold|math-font-series|bold|4<space|1.1fn>Inverting
+      for the tangential core flow> <datoms|<macro|x|<repeat|<arg|x>|<with|font-series|medium|<with|font-size|1|<space|0.2fn>.<space|0.2fn>>>>>|<htab|5mm>>
+      <no-break><pageref|auto-4><vspace|0.5fn>
+
+      <with|par-left|1tab|4.1<space|1.1fn>Framework
+      <datoms|<macro|x|<repeat|<arg|x>|<with|font-series|medium|<with|font-size|1|<space|0.2fn>.<space|0.2fn>>>>>|<htab|5mm>>
+      <no-break><pageref|auto-5>>
+
+      <with|par-left|1tab|4.2<space|1.1fn>The equation and fields in
+      spherical coordinates <datoms|<macro|x|<repeat|<arg|x>|<with|font-series|medium|<with|font-size|1|<space|0.2fn>.<space|0.2fn>>>>>|<htab|5mm>>
+      <no-break><pageref|auto-6>>
+
+      <vspace*|1fn><with|font-series|bold|math-font-series|bold|Appendix
+      A<space|1.1fn>Del in spherical coordinates>
+      <datoms|<macro|x|<repeat|<arg|x>|<with|font-series|medium|<with|font-size|1|<space|0.2fn>.<space|0.2fn>>>>>|<htab|5mm>>
+      <no-break><pageref|auto-7><vspace|0.5fn>
+
+      <with|par-left|1tab|A.1<space|1.1fn>Gradient
+      <datoms|<macro|x|<repeat|<arg|x>|<with|font-series|medium|<with|font-size|1|<space|0.2fn>.<space|0.2fn>>>>>|<htab|5mm>>
+      <no-break><pageref|auto-8>>
     </table-of-contents>
   </with>
 
@@ -142,7 +163,103 @@
   condition (ie. <math|<with|font-series|bold|\<nabla\>> \<cdot\>
   <with|font-series|bold|u> = 0>).
 
-  <section|Decomposition on the spherical harmonics basis>
+  <section|Inverting for the tangential core flow>
+
+  The <with|font-shape|italic|geodynamo inverse problem> is an ill-defined
+  problem as we have to retrieve the two tangential components of the core
+  flow, <math|u<rsub|\<theta\>>> and <math|u<rsub|\<phi\>>>, using one
+  equation. In this context, we have to provide additional information to
+  ensure the uniqueness of the solution. Although this is usually done using
+  Bayesian-like optimization, the use of <with|font-shape|italic|physics-informed
+  neural network> (PINN) could be a way forward, allowing (hopefully) to
+  resolve small length-scales that are computationally prohibitive otherwise.
+
+  <subsection|Framework>
+
+  We are solving the radial induction equation at the CMB
+
+  <\equation>
+    <frac|\<partial\>B<rsub|r>|\<partial\>t> =
+    -<with|font-series|bold|\<nabla\>><rsub|H> \<cdot\>
+    <around*|(|<with|font-series|bold|u><rsub|H> B<rsub|r>|)>
+  </equation>
+
+  where <math|\<partial\><rsub|t> B<rsub|r>> and <math|B<rsub|r>> are
+  extracted from already-existing magnetic models, such as
+  <verbatim|COV-OBS.x2> or <verbatim|CHAOS-7>.
+
+  The incompressibility condition on the tangential core flow
+  <math|<with|font-series|bold|u><rsub|H>> is enforced by considering a
+  toroidal\Upoloidal decomposition.
+
+  <\equation>
+    <with|font-series|bold|u><rsub|H> = -<with|font-series|bold|r>\<times\><with|font-series|bold|\<nabla\>><rsub|H>
+    <with|font|cal|T> + <with|font-series|bold|\<nabla\>><rsub|H><around*|(|r
+    <with|font|cal|S>|)>
+  </equation>
+
+  The flow can further be constrained, by having it to be quasi-geostrophic
+  (ie. if the force balance is dominated by Coriolis forces, then the flow
+  will align itself along the rotation axis, creating a columnar-like flow).
+  This condition reads
+
+  <\equation>
+    <with|font-series|bold|\<nabla\>><rsub|H> \<cdot\>
+    <around*|(|<with|font-series|bold|u><rsub|H>
+    cos<around*|(|\<theta\>|)>|)> = 0
+  </equation>
+
+  which can further be expanded by distributing the horizontal divergence
+  over the product, as
+
+  <\equation>
+    <with|font-series|bold|\<nabla\>><rsub|H> \<cdot\>
+    <with|font-series|bold|u><rsub|H> - u<rsub|\<theta\>>
+    <frac|tan<around*|(|\<theta\>|)>|r> = 0
+  </equation>
+
+  Then, we are defining two loss functions, <math|L<rsub|1>> and
+  <math|L<rsub|2>> to quantify the misfits to data (<math|L<rsub|1>>) and the
+  quasi-geostrophy (<math|L<rsub|2>>) as
+
+  <\equation>
+    <around*|{|<tabular*|<tformat|<cwith|1|-1|3|3|cell-halign|l>|<table|<row|<cell|L<rsub|1>>|<cell|=>|<cell|<frac|1|N><big|sum><rsub|grid><around*|\<\|\|\>|<frac|\<partial\>B<rsub|r>|\<partial\>t>+<with|font-series|bold|\<nabla\>><rsub|H>
+    \<cdot\> <around*|(|<with|font-series|bold|u><rsub|H>
+    B<rsub|r>|)>|\<\|\|\>><rsup|2>>>|<row|<cell|L<rsub|2>>|<cell|=>|<cell|<frac|1|N><big|sum><rsub|grid><around*|\<\|\|\>|<with|font-series|bold|\<nabla\>><rsub|H>
+    \<cdot\> <with|font-series|bold|u><rsub|H> - u<rsub|\<theta\>>
+    <frac|tan<around*|(|\<theta\>|)>|r>|\<\|\|\>><rsup|2>>>>>>|\<nobracket\>>
+  </equation>
+
+  <subsection|The equation and fields in spherical coordinates>
+
+  First, we start by expressing the toroidal and poloidal parts of the
+  tangential flow field. We define <math|<with|font-series|bold|u><rsub|T>
+  \<assign\>-<with|font-series|bold|r>\<times\><with|font-series|bold|\<nabla\>><rsub|H>
+  <with|font|cal|T> > and <math|<with|font-series|bold|u><rsub|S> \<assign\>
+  <with|font-series|bold|\<nabla\>><rsub|H><around*|(|r
+  <with|font|cal|S>|)>>. Consequently, these two fields read
+
+  <\equation>
+    <around*|{|<tabular*|<tformat|<cwith|1|-1|3|3|cell-halign|l>|<cwith|1|-1|1|1|cell-halign|r>|<table|<row|<cell|<with|font-series|bold|u><rsub|T>>|<cell|=>|<cell|<around*|(|<frac|1|sin<around*|(|\<theta\>|)>>
+    <frac|\<partial\><with|font|cal|T>|\<partial\>\<phi\>>,-<frac|\<partial\><with|font|cal|T>|\<partial\>\<theta\>>|)>>>|<row|<cell|<with|font-series|bold|u><rsub|S>>|<cell|=>|<cell|<around*|(|
+    <frac|\<partial\><with|font|cal|S>|\<partial\>\<theta\>>,<frac|1|sin<around*|(|\<theta\>|)>>
+    <frac|\<partial\><with|font|cal|S>|\<partial\>\<phi\>>|)>>>>>>|\<nobracket\>>
+  </equation>
+
+  <appendix|Del in spherical coordinates>
+
+  Recalling the usual (but useful) formulae of the del operator in spherical
+  coordinates, applied either on a scalar field
+  <math|F<around*|(|r,\<theta\>,\<phi\>|)>> or a vector field
+  <math|<with|font-series|bold|F><around*|(|r,\<theta\>,\<phi\>|)>>.
+
+  <subsection|Gradient>
+
+  <\equation>
+    <with|font-series|bold|\<nabla\>>F = <around*|(|<frac|\<partial\>F|\<partial\>r>,<frac|1|r>
+    <frac|\<partial\>F|\<partial\>\<theta\>>,<frac|1|r
+    sin<around*|(|\<theta\>|)>> <frac|\<partial\>F|\<partial\>\<phi\>>|)>
+  </equation>
 
   \;
 </body>
@@ -154,8 +271,12 @@
   <\collection>
     <associate|auto-1|<tuple|1|1>>
     <associate|auto-2|<tuple|2|2>>
-    <associate|auto-3|<tuple|3|?>>
-    <associate|auto-4|<tuple|4|?>>
+    <associate|auto-3|<tuple|3|3>>
+    <associate|auto-4|<tuple|4|3>>
+    <associate|auto-5|<tuple|4.1|4>>
+    <associate|auto-6|<tuple|4.2|5>>
+    <associate|auto-7|<tuple|A|5>>
+    <associate|auto-8|<tuple|A.1|5>>
   </collection>
 </references>
 
@@ -173,6 +294,27 @@
       <vspace*|1fn><with|font-series|<quote|bold>|math-font-series|<quote|bold>|3<space|1.1fn>Tangential
       flow field> <datoms|<macro|x|<repeat|<arg|x>|<with|font-series|medium|<with|font-size|1|<space|0.2fn>.<space|0.2fn>>>>>|<htab|5mm>>
       <no-break><pageref|auto-3><vspace|0.5fn>
+
+      <vspace*|1fn><with|font-series|<quote|bold>|math-font-series|<quote|bold>|4<space|1.1fn>Inverting
+      for the tangential core flow> <datoms|<macro|x|<repeat|<arg|x>|<with|font-series|medium|<with|font-size|1|<space|0.2fn>.<space|0.2fn>>>>>|<htab|5mm>>
+      <no-break><pageref|auto-4><vspace|0.5fn>
+
+      <with|par-left|<quote|1tab>|4.1<space|1.1fn>Framework
+      <datoms|<macro|x|<repeat|<arg|x>|<with|font-series|medium|<with|font-size|1|<space|0.2fn>.<space|0.2fn>>>>>|<htab|5mm>>
+      <no-break><pageref|auto-5>>
+
+      <with|par-left|<quote|1tab>|4.2<space|1.1fn>The equation and fields in
+      spherical coordinates <datoms|<macro|x|<repeat|<arg|x>|<with|font-series|medium|<with|font-size|1|<space|0.2fn>.<space|0.2fn>>>>>|<htab|5mm>>
+      <no-break><pageref|auto-6>>
+
+      <vspace*|1fn><with|font-series|<quote|bold>|math-font-series|<quote|bold>|Appendix
+      A<space|1.1fn>Del in spherical coordinates>
+      <datoms|<macro|x|<repeat|<arg|x>|<with|font-series|medium|<with|font-size|1|<space|0.2fn>.<space|0.2fn>>>>>|<htab|5mm>>
+      <no-break><pageref|auto-7><vspace|0.5fn>
+
+      <with|par-left|<quote|1tab>|A.1<space|1.1fn>Gradient
+      <datoms|<macro|x|<repeat|<arg|x>|<with|font-series|medium|<with|font-size|1|<space|0.2fn>.<space|0.2fn>>>>>|<htab|5mm>>
+      <no-break><pageref|auto-8>>
     </associate>
   </collection>
 </auxiliary>
