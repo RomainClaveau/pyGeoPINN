@@ -39,9 +39,13 @@
       <datoms|<macro|x|<repeat|<arg|x>|<with|font-series|medium|<with|font-size|1|<space|0.2fn>.<space|0.2fn>>>>>|<htab|5mm>>
       <no-break><pageref|auto-7><vspace|0.5fn>
 
-      <with|par-left|1tab|A.1<space|1.1fn>Gradient
+      <with|par-left|1tab|A.1<space|1.1fn>Horizontal gradient
       <datoms|<macro|x|<repeat|<arg|x>|<with|font-series|medium|<with|font-size|1|<space|0.2fn>.<space|0.2fn>>>>>|<htab|5mm>>
       <no-break><pageref|auto-8>>
+
+      <with|par-left|1tab|A.2<space|1.1fn>Horizontal divergence
+      <datoms|<macro|x|<repeat|<arg|x>|<with|font-series|medium|<with|font-size|1|<space|0.2fn>.<space|0.2fn>>>>>|<htab|5mm>>
+      <no-break><pageref|auto-9>>
     </table-of-contents>
   </with>
 
@@ -285,6 +289,10 @@
     u<rsub|\<theta\>> tan<around*|(|\<theta\>|)>= 0
   </equation>
 
+  <subsection|Strategy>
+
+  \;
+
   <appendix|Del in spherical coordinates>
 
   Recalling the usual (but useful) formulae of the del operator in spherical
@@ -319,14 +327,15 @@
 <\references>
   <\collection>
     <associate|auto-1|<tuple|1|1>>
+    <associate|auto-10|<tuple|A.2|?>>
     <associate|auto-2|<tuple|2|2>>
     <associate|auto-3|<tuple|3|3>>
     <associate|auto-4|<tuple|4|3>>
     <associate|auto-5|<tuple|4.1|4>>
     <associate|auto-6|<tuple|4.2|5>>
-    <associate|auto-7|<tuple|A|5>>
-    <associate|auto-8|<tuple|A.1|5>>
-    <associate|auto-9|<tuple|A.2|?>>
+    <associate|auto-7|<tuple|4.3|6>>
+    <associate|auto-8|<tuple|A|6>>
+    <associate|auto-9|<tuple|A.1|6>>
   </collection>
 </references>
 
@@ -362,9 +371,13 @@
       <datoms|<macro|x|<repeat|<arg|x>|<with|font-series|medium|<with|font-size|1|<space|0.2fn>.<space|0.2fn>>>>>|<htab|5mm>>
       <no-break><pageref|auto-7><vspace|0.5fn>
 
-      <with|par-left|<quote|1tab>|A.1<space|1.1fn>Gradient
+      <with|par-left|<quote|1tab>|A.1<space|1.1fn>Horizontal gradient
       <datoms|<macro|x|<repeat|<arg|x>|<with|font-series|medium|<with|font-size|1|<space|0.2fn>.<space|0.2fn>>>>>|<htab|5mm>>
       <no-break><pageref|auto-8>>
+
+      <with|par-left|<quote|1tab>|A.2<space|1.1fn>Horizontal divergence
+      <datoms|<macro|x|<repeat|<arg|x>|<with|font-series|medium|<with|font-size|1|<space|0.2fn>.<space|0.2fn>>>>>|<htab|5mm>>
+      <no-break><pageref|auto-9>>
     </associate>
   </collection>
 </auxiliary>
