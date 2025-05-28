@@ -8,6 +8,22 @@
   Network>|<doc-date|<date>>|<doc-author|<author-data|<author-name|Romain
   Claveau>>>>
 
+  <\with|par-mode|right>
+    <\table-of-contents|toc>
+      <vspace*|1fn><with|font-series|bold|math-font-series|bold|1<space|1.1fn>Context>
+      <datoms|<macro|x|<repeat|<arg|x>|<with|font-series|medium|<with|font-size|1|<space|0.2fn>.<space|0.2fn>>>>>|<htab|5mm>>
+      <no-break><pageref|auto-1><vspace|0.5fn>
+
+      <vspace*|1fn><with|font-series|bold|math-font-series|bold|2<space|1.1fn>The
+      geodynamo inverse problem> <datoms|<macro|x|<repeat|<arg|x>|<with|font-series|medium|<with|font-size|1|<space|0.2fn>.<space|0.2fn>>>>>|<htab|5mm>>
+      <no-break><pageref|auto-2><vspace|0.5fn>
+
+      <vspace*|1fn><with|font-series|bold|math-font-series|bold|3<space|1.1fn>Tangential
+      flow field> <datoms|<macro|x|<repeat|<arg|x>|<with|font-series|medium|<with|font-size|1|<space|0.2fn>.<space|0.2fn>>>>>|<htab|5mm>>
+      <no-break><pageref|auto-3><vspace|0.5fn>
+    </table-of-contents>
+  </with>
+
   <section|Context>
 
   The geodynamo is a physical process behind the Earth's sustained magnetic
@@ -99,6 +115,36 @@
   inferring the tangential outer core flow
   <math|<with|font-series|bold|u><rsub|H>> from the magnetic observations
   <math|B<rsub|r>>.
+
+  <section|Tangential flow field>
+
+  As the outer core flow is incompressible, it admits a unique
+  toroidal\Upoloidal decomposition:
+
+  <\equation>
+    <with|font-series|bold|u> = <with|font-series|bold|\<nabla\>>\<times\><around*|(|<with|font-series|bold|r>
+    <with|font|cal|T>|)> + <with|font-series|bold|\<nabla\>>\<times\><around*|(|<with|font-series|bold|\<nabla\>>\<times\><around*|(|<with|font-series|bold|r>
+    <with|font|cal|S>|)>|)>
+  </equation>
+
+  with <math|<with|font|cal|T>> and <math|<with|font|cal|S>> the toroidal and
+  poloidal scalar fields, respectively. The expression is further simplied as
+  we are considering the tangential flow, and reads
+
+  <\equation>
+    <with|font-series|bold|u><rsub|H> = -<with|font-series|bold|r>\<times\><with|font-series|bold|\<nabla\>><rsub|H>
+    <with|font|cal|T> + <with|font-series|bold|\<nabla\>><rsub|H><around*|(|r
+    <with|font|cal|S>|)>
+  </equation>
+
+  Using this expression for the tangential flow field
+  <math|<with|font-series|bold|u><rsub|H>> ensures the incompressibility
+  condition (ie. <math|<with|font-series|bold|\<nabla\>> \<cdot\>
+  <with|font-series|bold|u> = 0>).
+
+  <section|Decomposition on the spherical harmonics basis>
+
+  \;
 </body>
 
 <initial|<\collection>
@@ -108,6 +154,8 @@
   <\collection>
     <associate|auto-1|<tuple|1|1>>
     <associate|auto-2|<tuple|2|2>>
+    <associate|auto-3|<tuple|3|?>>
+    <associate|auto-4|<tuple|4|?>>
   </collection>
 </references>
 
@@ -121,6 +169,10 @@
       <vspace*|1fn><with|font-series|<quote|bold>|math-font-series|<quote|bold>|2<space|1.1fn>The
       geodynamo inverse problem> <datoms|<macro|x|<repeat|<arg|x>|<with|font-series|medium|<with|font-size|1|<space|0.2fn>.<space|0.2fn>>>>>|<htab|5mm>>
       <no-break><pageref|auto-2><vspace|0.5fn>
+
+      <vspace*|1fn><with|font-series|<quote|bold>|math-font-series|<quote|bold>|3<space|1.1fn>Tangential
+      flow field> <datoms|<macro|x|<repeat|<arg|x>|<with|font-series|medium|<with|font-size|1|<space|0.2fn>.<space|0.2fn>>>>>|<htab|5mm>>
+      <no-break><pageref|auto-3><vspace|0.5fn>
     </associate>
   </collection>
 </auxiliary>
