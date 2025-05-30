@@ -291,7 +291,43 @@
 
   <subsection|Strategy>
 
-  \;
+  Directly inverting for the core flow on the whole grid would be numerically
+  challenging, as we would have to use a large neural network to model small
+  length-scales.
+
+  An idea, as done by <underline|Shakespeare-Rees et al. (2025)>, is to
+  generate a patchwork of smaller rectangles. The core flow is then inverted
+  on all the rectangles. Overlaps are added for continuity purpose around all
+  rectangles.
+
+  A first optimization is carried out using the Adam algorithm. Then,
+  fine-tuning may be done using the L-BFGS algorithm. Finally, this procedure
+  could be carried out several time, with different initial conditions and
+  averaged.
+
+  Regarding the neural network itself, as we are inverting the core flow on a
+  small portion of space at a time, we do not have to rely on large or deep
+  network. A good starting point might be:
+
+  <\enumerate-roman>
+    <item>Number of nodes: 64
+
+    <item>Number of hidden layers: 3
+  </enumerate-roman>
+
+  In order to get a finer resolution, two solutions are possible:
+
+  <\enumerate-roman>
+    <item>Reduce the size of each rectangle of the patchwork
+
+    <item>Increase the size of the neural network
+  </enumerate-roman>
+
+  In the first case, it allows <with|font-shape|italic|de facto> a better
+  resolution and also to lower the size of the neural network as its
+  associated data should be smoother. In the second case, it might allow a
+  better description of small length-scales but the neural network may fit
+  noise instead.
 
   <appendix|Del in spherical coordinates>
 
@@ -366,18 +402,22 @@
       spherical coordinates <datoms|<macro|x|<repeat|<arg|x>|<with|font-series|medium|<with|font-size|1|<space|0.2fn>.<space|0.2fn>>>>>|<htab|5mm>>
       <no-break><pageref|auto-6>>
 
+      <with|par-left|<quote|1tab>|4.3<space|1.1fn>Strategy
+      <datoms|<macro|x|<repeat|<arg|x>|<with|font-series|medium|<with|font-size|1|<space|0.2fn>.<space|0.2fn>>>>>|<htab|5mm>>
+      <no-break><pageref|auto-7>>
+
       <vspace*|1fn><with|font-series|<quote|bold>|math-font-series|<quote|bold>|Appendix
       A<space|1.1fn>Del in spherical coordinates>
       <datoms|<macro|x|<repeat|<arg|x>|<with|font-series|medium|<with|font-size|1|<space|0.2fn>.<space|0.2fn>>>>>|<htab|5mm>>
-      <no-break><pageref|auto-7><vspace|0.5fn>
+      <no-break><pageref|auto-8><vspace|0.5fn>
 
       <with|par-left|<quote|1tab>|A.1<space|1.1fn>Horizontal gradient
       <datoms|<macro|x|<repeat|<arg|x>|<with|font-series|medium|<with|font-size|1|<space|0.2fn>.<space|0.2fn>>>>>|<htab|5mm>>
-      <no-break><pageref|auto-8>>
+      <no-break><pageref|auto-9>>
 
       <with|par-left|<quote|1tab>|A.2<space|1.1fn>Horizontal divergence
       <datoms|<macro|x|<repeat|<arg|x>|<with|font-series|medium|<with|font-size|1|<space|0.2fn>.<space|0.2fn>>>>>|<htab|5mm>>
-      <no-break><pageref|auto-9>>
+      <no-break><pageref|auto-10>>
     </associate>
   </collection>
 </auxiliary>
