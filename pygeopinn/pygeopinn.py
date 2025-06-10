@@ -33,7 +33,7 @@ class pygeopinn:
             raise ValueError("Bad shape for the quantity.")
         
         # Checking the shape for the fields (dim = 2)
-        if name != "times" and len(quantity) != 2:
+        if name != "times" and len(quantity.shape) != 2:
             raise ValueError("Bad shape for the quantity.")
         
         # Saving the quantity
@@ -49,12 +49,6 @@ class pygeopinn:
     
     # Setting the grid on which we'll invert the core flow
     def set_grid(self, thetas, phis, avoid_poles = True, avoid_equator = True):
-        
-        if np.max(np.abs(thetas)) > np.pi:
-            thetas = np.rad2deg(thetas)
-
-        if np.max(np.abs(phis)) > 2 * np.pi:
-            phis = np.rad2deg(phis)
 
         # Flags for avoiding the equator and the poles
         self.avoid_poles = avoid_poles
@@ -113,11 +107,96 @@ class pygeopinn:
         # Saving
         self.quantities_nn = {
             "inputs": inputs,
+            "thetas": thetas_nn,
+            "phis": phis_nn,
             "Br": Br_nn,
             "dBrdt": dBrdt_nn,
             "dBrdth": dBrdth_nn,
             "dBrdph": dBrdph_nn
         }
+
+    # Adding the loss
+    def loss(self, inputs):
+        # Radius at the CMB (in km)
+        r = 3485
+
+        # Retrieving the predicted flow
+        u_pred = self.model(inputs)
+
+        # Retrieving the toroidal and poloidal components
+
+        T = u_pred[:, 0:1]
+        S = u_pred[:, 1:2]
+
+        # First derivatives of T and S
+        dT_dth = torch.autograd.grad(T, self.quantities_nn["thetas"], grad_outputs=torch.ones_like(T), create_graph=True, retain_graph=True)[0]
+        dT_dph = torch.autograd.grad(T, self.quantities_nn["phis"], grad_outputs=torch.ones_like(T), create_graph=True, retain_graph=True)[0]
+        dS_dth = torch.autograd.grad(S, self.quantities_nn["thetas"], grad_outputs=torch.ones_like(S), create_graph=True, retain_graph=True)[0]
+        dS_dph = torch.autograd.grad(S, self.quantities_nn["phis"], grad_outputs=torch.ones_like(S), create_graph=True, retain_graph=True)[0]
+
+        """
+        Computing L1
+        """
+        # Computing the L1² loss function
+        # L1² = || dBr / dt + ∇h • (Uh Br) ||²
+        # ∇h • (Uh Br) = (∇h • Uh) Br + Uh • (∇h Br)
+
+        sin_th = torch.sin(self.quantities_nn["thetas"])
+        tan_th = torch.tan(self.quantities_nn["thetas"])
+
+        # We are defining u_th and u_ph with T and S
+        u_th = -dT_dph / sin_th + dS_dth
+        u_ph = dT_dth + dS_dph / sin_th
+
+        # Computing ∇h • Uh
+        u_th_sin_th = u_th * sin_th
+        d_u_th_sin_th_dth = torch.autograd.grad(u_th_sin_th, self.quantities_nn["thetas"], grad_outputs=torch.ones_like(u_th_sin_th), create_graph=True, retain_graph=True)[0]
+
+        d_u_ph_dph = torch.autograd.grad(u_ph, self.quantities_nn["phis"], grad_outputs=torch.ones_like(u_ph), create_graph=True, retain_graph=True)[0]
+
+        divH_uH = (1 / (r * sin_th)) * (d_u_th_sin_th_dth + d_u_ph_dph)
+
+        # Computing ∇h Br
+        # The derivatives are provided as they are not the NN variables but inputs
+        gradH_Br_th = (1 / r) * self.quantities_nn["dBrdth"]
+        gradH_Br_ph = (1 / (r * sin_th)) * self.quantities_nn["dBrdph"]
+
+        # Computing L1
+        L1 = self.quantities_nn["dBrdt"] + self.quantities_nn["Br"] * divH_uH + u_th * gradH_Br_th + u_ph * gradH_Br_ph
+
+        # Computing L2
+        L2 = divH_uH - u_th * tan_th / r
+
+        return L1, L2, -(self.quantities_nn["Br"] * divH_uH + u_th * gradH_Br_th + u_ph * gradH_Br_ph), u_th + u_ph
+    
+    # Training the model
+    def train(self, nb_reals = 5, nb_epochs = 1000):
+        optimizer = torch.optim.Adam(self.model.parameters(), 1e-3)
+
+        λ = 1e3
+
+        for epoch in range(nb_epochs):
+            optimizer.zero_grad()
+
+            L1, L2, *_ = self.loss(self.quantities_nn["inputs"])
+
+            L1_loss = (L1**2).mean()
+            L2_loss = (L2**2).mean()
+
+            Loss = L1_loss + λ * L2_loss
+            Loss.backward()
+
+            optimizer.step()
+
+            if epoch % 100 == 0:
+                print(f"Epoch {epoch}: L1 = {L1_loss}, L2 = {L2_loss}")
+
+    # Retrieving the results
+    def results(self):
+        *_, dBrdt_pred, uH_pred = self.loss(self.quantities_nn["inputs"])
+
+        return  dBrdt_pred.reshape(self.quantities["Br"].shape).detach().numpy(), \
+                uH_pred.reshape(self.quantities["Br"].shape).detach().numpy()
 
 """
 Creating the neural network model
