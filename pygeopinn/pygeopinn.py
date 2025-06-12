@@ -14,9 +14,14 @@ Solving the geodynamo inverse problem using Physics-Informed Neural Network (PIN
 class pygeopinn:
 
     # Creating the instance
-    def __init__(self, nb_layers = 3, nb_nodes = 64) -> None:
-        self.model = Model(nb_layers, nb_nodes)
+    def __init__(self, nb_layers = 3, nb_nodes = 64, nb_inputs = 2, nb_outputs = 2) -> None:
+        self.model = Model(nb_layers, nb_nodes, nb_inputs, nb_outputs)
         self.quantities = dict()
+
+        self.nb_layers = nb_layers
+        self.nb_nodes = nb_nodes
+        self.nb_inputs = nb_inputs
+        self.nb_outputs = nb_outputs
 
     # Adding a quantity
     def add(self, name, quantity):
@@ -72,14 +77,14 @@ class pygeopinn:
             raise Exception("Missing the grid")
         
         # Checking if the grid dimensions match those of the fields
-        if self.grid["thetas"].size != self.quantities["Br"].shape[0] or self.grid["phis"].size != self.quantities["Br"].shape[1]:
+        if self.grid["thetas"].size != self.quantities["dBrdt"].shape[0] or self.grid["phis"].size != self.quantities["dBrdt"].shape[1]:
             raise Exception("The fields do not appear aligned with the grid.")
         
         # If the field derivatives are not computed yet, we are computing them
-        if "dBrdth" not in self.quantities:
+        if "Br" in self.quantities and "dBrdth" not in self.quantities:
             self.quantities["dBrdth"] = np.gradient(self.quantities["Br"], self.grid["thetas"], axis=0)
 
-        if "dBrdph" not in self.quantities:
+        if "Br" in self.quantities and "dBrdph" not in self.quantities:
             self.quantities["dBrdph"] = np.gradient(self.quantities["Br"], self.grid["phis"], axis=1)
 
         # Now, we need to convert all the quantities into tensor
@@ -96,10 +101,12 @@ class pygeopinn:
         phis_nn = torch.tensor(phis_flatten[:, None], dtype=torch.float32, requires_grad=True)
 
         # Creating the fields tensor
-        Br_nn = torch.tensor(self.quantities["Br"].flatten()[:, None], dtype=torch.float32)
+        if "Br" in self.quantities:
+            Br_nn = torch.tensor(self.quantities["Br"].flatten()[:, None], dtype=torch.float32)
+            dBrdth_nn = torch.tensor(self.quantities["dBrdth"].flatten()[:, None], dtype=torch.float32)
+            dBrdph_nn = torch.tensor(self.quantities["dBrdph"].flatten()[:, None], dtype=torch.float32)
+
         dBrdt_nn = torch.tensor(self.quantities["dBrdt"].flatten()[:, None], dtype=torch.float32)
-        dBrdth_nn = torch.tensor(self.quantities["dBrdth"].flatten()[:, None], dtype=torch.float32)
-        dBrdph_nn = torch.tensor(self.quantities["dBrdph"].flatten()[:, None], dtype=torch.float32)
 
         # Creating the angular inputs
         inputs = torch.cat([thetas_nn, phis_nn], dim=1)
@@ -109,11 +116,13 @@ class pygeopinn:
             "inputs": inputs,
             "thetas": thetas_nn,
             "phis": phis_nn,
-            "Br": Br_nn,
-            "dBrdt": dBrdt_nn,
-            "dBrdth": dBrdth_nn,
-            "dBrdph": dBrdph_nn
+            "dBrdt": dBrdt_nn
         }
+
+        if "Br" in self.quantities:
+            self.quantities_nn["Br"] = Br_nn
+            self.quantities_nn["dBrdth"] = dBrdth_nn
+            self.quantities_nn["dBrdph"] = dBrdph_nn
 
     # Adding the loss
     def loss(self, inputs):
@@ -128,11 +137,25 @@ class pygeopinn:
         T = u_pred[:, 0:1]
         S = u_pred[:, 1:2]
 
+        # We are predicting also the radial magnetic field
+        if "Br" not in self.quantities_nn and self.nb_outputs != 3:
+            raise ValueError("Input features too small to predict Br.")
+
         # First derivatives of T and S
         dT_dth = torch.autograd.grad(T, self.quantities_nn["thetas"], grad_outputs=torch.ones_like(T), create_graph=True, retain_graph=True)[0]
         dT_dph = torch.autograd.grad(T, self.quantities_nn["phis"], grad_outputs=torch.ones_like(T), create_graph=True, retain_graph=True)[0]
         dS_dth = torch.autograd.grad(S, self.quantities_nn["thetas"], grad_outputs=torch.ones_like(S), create_graph=True, retain_graph=True)[0]
         dS_dph = torch.autograd.grad(S, self.quantities_nn["phis"], grad_outputs=torch.ones_like(S), create_graph=True, retain_graph=True)[0]
+
+        # If we are predicting the radial magnetic field
+        if self.nb_outputs == 3:
+            Br = u_pred[:, 2:3]
+            dBrdth = torch.autograd.grad(Br, self.quantities_nn["thetas"], grad_outputs=torch.ones_like(Br), create_graph=True, retain_graph=True)[0]
+            dBrdph = torch.autograd.grad(Br, self.quantities_nn["phis"], grad_outputs=torch.ones_like(Br), create_graph=True, retain_graph=True)[0]
+        else:
+            dBrdth = self.quantities_nn["dBrdth"]
+            dBrdph = self.quantities_nn["dBrdph"]
+            Br = self.quantities_nn["Br"]
 
         """
         Computing L1
@@ -158,59 +181,127 @@ class pygeopinn:
 
         # Computing ∇h Br
         # The derivatives are provided as they are not the NN variables but inputs
-        gradH_Br_th = (1 / r) * self.quantities_nn["dBrdth"]
-        gradH_Br_ph = (1 / (r * sin_th)) * self.quantities_nn["dBrdph"]
+        gradH_Br_th = (1 / r) * dBrdth
+        gradH_Br_ph = (1 / (r * sin_th)) * dBrdph
+
+        # Computing the predicted SV
+        dBrdt_predicted = -(Br * divH_uH + u_th * gradH_Br_th + u_ph * gradH_Br_ph)
 
         # Computing L1
-        L1 = self.quantities_nn["dBrdt"] + self.quantities_nn["Br"] * divH_uH + u_th * gradH_Br_th + u_ph * gradH_Br_ph
+        L1 = self.quantities_nn["dBrdt"] - dBrdt_predicted
 
         # Computing L2
         L2 = divH_uH - u_th * tan_th / r
 
-        return L1, L2, -(self.quantities_nn["Br"] * divH_uH + u_th * gradH_Br_th + u_ph * gradH_Br_ph), u_th + u_ph
+        # Computing L3
+        if self.nb_outputs == 3:
+            L3 = self.quantities_nn["Br"] - Br
+
+        # Returning the predicted quantities and losses
+        if self.nb_outputs != 3:
+            return L1, L2, dBrdt_predicted, u_th, u_ph
+        
+        return L1, L2, L3, dBrdt_predicted, u_th, u_ph, Br
     
     # Training the model
-    def train(self, nb_reals = 5, nb_epochs = 1000):
-        optimizer = torch.optim.Adam(self.model.parameters(), 1e-3)
+    def train(self, nb_reals = 5, nb_epochs = 1000, algo = "lbfgs"):
 
-        λ = 1e3
+        λ2 = 1e3
+        λ3 = 1e3
 
-        for epoch in range(nb_epochs):
-            optimizer.zero_grad()
+        if algo == "adam":
+            optimizer = torch.optim.Adam(self.model.parameters(), 1e-3)
 
-            L1, L2, *_ = self.loss(self.quantities_nn["inputs"])
+            for epoch in range(nb_epochs):
+                optimizer.zero_grad()
 
-            L1_loss = (L1**2).mean()
-            L2_loss = (L2**2).mean()
+                if self.nb_outputs != 3:
+                    L1, L2, *_ = self.loss(self.quantities_nn["inputs"])
+                else:
+                    L1, L2, L3, *_ = self.loss(self.quantities_nn["inputs"])
 
-            Loss = L1_loss + λ * L2_loss
-            Loss.backward()
+                L1_loss = (L1**2).mean()
+                L2_loss = (L2**2).mean()
 
-            optimizer.step()
+                if self.nb_outputs == 3:
+                    L3_loss = (L3**2).mean()
 
-            if epoch % 100 == 0:
-                print(f"Epoch {epoch}: L1 = {L1_loss}, L2 = {L2_loss}")
+                if self.nb_outputs != 3:
+                    Loss = L1_loss + λ2 * L2_loss
+                else:
+                    Loss = L1_loss + λ2 * L2_loss + λ3 * L3_loss
+
+                Loss.backward()
+
+                optimizer.step()
+
+                if epoch % 100 == 0:
+                    if self.nb_outputs != 3:
+                        print(f"Epoch {epoch}: L1 = {L1_loss}, L2 = {L2_loss}")
+                    else:
+                        print(f"Epoch {epoch}: L1 = {L1_loss}, L2 = {L2_loss}, L3 = {L3_loss}")
+
+        if algo == "lbfgs":
+            optimizer = torch.optim.LBFGS(self.model.parameters(), line_search_fn="strong_wolfe", tolerance_grad=1e-3, tolerance_change=1e-6)
+
+            def closure():
+                optimizer.zero_grad()
+
+                if self.nb_outputs != 3:
+                    L1, L2, *_ = self.loss(self.quantities_nn["inputs"])
+                else:
+                    L1, L2, L3, *_ = self.loss(self.quantities_nn["inputs"])
+
+                L1_loss = (L1**2).mean()
+                L2_loss = (L2**2).mean()
+
+                if self.nb_outputs == 3:
+                    L3_loss = (L3**2).mean()
+
+                if self.nb_outputs != 3:
+                    Loss = L1_loss + λ2 * L2_loss
+                else:
+                    Loss = L1_loss + λ2 * L2_loss + λ3 * L3_loss
+
+                Loss.backward()
+
+                return Loss
+
+            for epoch in range(nb_epochs):
+                optimizer.step(closure)
+
+                if epoch % 100 == 0:
+                    print(f"Epoch {epoch}: Loss = {closure()}")
 
     # Retrieving the results
     def results(self):
-        *_, dBrdt_pred, uH_pred = self.loss(self.quantities_nn["inputs"])
+        if self.nb_outputs != 3:
+            *_, dBrdt_pred, uth_pred, uph_pred = self.loss(self.quantities_nn["inputs"])
+        
+            return  dBrdt_pred.reshape(self.quantities["dBrdt"].shape).detach().numpy(), \
+                    uth_pred.reshape(self.quantities["dBrdt"].shape).detach().numpy(), \
+                    uph_pred.reshape(self.quantities["dBrdt"].shape).detach().numpy()
+        else:
+            *_, dBrdt_pred, uth_pred, uph_pred, Br_pred = self.loss(self.quantities_nn["inputs"])
 
-        return  dBrdt_pred.reshape(self.quantities["Br"].shape).detach().numpy(), \
-                uH_pred.reshape(self.quantities["Br"].shape).detach().numpy()
+            return  dBrdt_pred.reshape(self.quantities["dBrdt"].shape).detach().numpy(), \
+                    uth_pred.reshape(self.quantities["dBrdt"].shape).detach().numpy(), \
+                    uph_pred.reshape(self.quantities["dBrdt"].shape).detach().numpy(), \
+                    Br_pred.reshape(self.quantities["dBrdt"].shape).detach().numpy()
 
 """
 Creating the neural network model
 with `nb_layers` hidden layers and `nb_nodes` nodes
 """
 class Model(torch.nn.Module):
-    def __init__(self, nb_layers = 3, nb_nodes = 64):
+    def __init__(self, nb_layers = 3, nb_nodes = 64, nb_inputs = 2, nb_outputs = 2):
         super(Model, self).__init__()
 
         # For storing the layers
         layers = []
 
         # Adding the first layer 
-        layers.append(torch.nn.Linear(2, nb_nodes))
+        layers.append(torch.nn.Linear(nb_inputs, nb_nodes))
         layers.append(torch.nn.Tanh())
 
         # Adding the hidden layers
@@ -219,7 +310,7 @@ class Model(torch.nn.Module):
             layers.append(torch.nn.Tanh())
 
         # Adding the last layer
-        layers.append(torch.nn.Linear(nb_nodes, 2))
+        layers.append(torch.nn.Linear(nb_nodes, nb_outputs))
 
         # Creating the neural network
         self.net = torch.nn.Sequential(*layers)
